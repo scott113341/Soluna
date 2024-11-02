@@ -62,6 +62,7 @@ const moonData = [
   sunMoonInfo.moonPhase,
   `↑${sunMoonInfo.moonriseStr}`,
   `↓${sunMoonInfo.moonsetStr}`,
+  `(${Math.round(sunMoonInfo.moonFraction * 100)}%)`,
 ];
 const moonText = stack.addText(moonData.join(" "));
 moonText.font = Font.systemFont(14);
@@ -83,13 +84,11 @@ Script.complete();
 async function getLocationInfo() {
   Location.setAccuracyToThreeKilometers();
   const { latitude, longitude } = await Location.current();
-  log({ latitude, longitude });
   const locations = await Location.reverseGeocode(latitude, longitude);
   const location = locations[0];
   const locationStr = location
     ? `${location.locality}, ${location.administrativeArea}`
     : "Unknown";
-  // log(locationStr);
 
   return { latitude, longitude, location, locationStr };
 }
