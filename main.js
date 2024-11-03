@@ -141,14 +141,25 @@ function getDeltas(sunMoonInfo, yesterdaySunMoonInfo) {
   const dayDeltaMs = sunMoonInfo.dayLengthMs - yesterdaySunMoonInfo.dayLengthMs;
   const dayDeltaMsStr = lengthMsToDeltaStr(dayDeltaMs);
 
-  const sunriseAsIfToday = new Date(yesterdaySunMoonInfo.sunrise);
-  sunriseAsIfToday.setDate(sunriseAsIfToday.getDate() + 1);
-  const sunriseDeltaMs = sunMoonInfo.sunrise - sunriseAsIfToday;
+  function delta(today, yesterday) {
+    const todayMidnight = new Date(today);
+    todayMidnight.setHours(0, 0, 0, 0);
+    const todayMsSinceMidnight = today - todayMidnight;
+
+    const yesterdayMidnight = new Date(yesterday);
+    yesterdayMidnight.setHours(0, 0, 0, 0);
+    const yesterdayMsSinceMidnight = yesterday - yesterdayMidnight;
+
+    return todayMsSinceMidnight - yesterdayMsSinceMidnight;
+  }
+
+  const sunriseDeltaMs = delta(
+    sunMoonInfo.sunrise,
+    yesterdaySunMoonInfo.sunrise,
+  );
   const sunriseDeltaStr = lengthMsToDeltaStr(sunriseDeltaMs);
 
-  const sunsetAsIfToday = new Date(yesterdaySunMoonInfo.sunset);
-  sunsetAsIfToday.setDate(sunsetAsIfToday.getDate() + 1);
-  const sunsetDeltaMs = sunMoonInfo.sunset - sunsetAsIfToday;
+  const sunsetDeltaMs = delta(sunMoonInfo.sunset, yesterdaySunMoonInfo.sunset);
   const sunsetDeltaStr = lengthMsToDeltaStr(sunsetDeltaMs);
 
   return {
@@ -215,7 +226,7 @@ async function log(message) {
   console.log(message);
 
   try {
-    const req = new Request("http://192.168.2.3:3000/logs");
+    const req = new Request("http://192.168.2.14:3000/logs");
     req.method = "POST";
     req.body = JSON.stringify(message);
     await req.loadString();
