@@ -2,7 +2,8 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-brown; icon-glyph: magic;
 
-const SunCalc = importModule("modules/suncalc.js");
+const SunCalc = importModule("vendor/sun-calc.js");
+const SmallDate = importModule("vendor/small-date.js");
 
 const NOW = new Date();
 
@@ -37,12 +38,10 @@ const percentProgressStr =
 // LAYOUT //
 ////////////
 
-// Create widget
 const widget = new ListWidget();
-const monoFont = new Font("CourierNewPS-BoldMT", 18);
-
 const stack = widget.addStack();
 stack.layoutVertically();
+const monoFont = new Font("CourierNewPS-BoldMT", 18);
 
 [
   stack.addText(`Daytime: ${sunMoonInfo.dayLengthStr} (${dayDeltaMsStr})`),
@@ -70,7 +69,7 @@ moonText.font = Font.systemFont(14);
 stack.addSpacer(8);
 
 const refreshText = stack.addText(
-  `Refreshed ${format(new Date(), "HH:mm MMM d")} in ${locationStr}`,
+  `Refreshed ${SmallDate.format(new Date(), "HH:mm MMM d")} in ${locationStr}`,
 );
 refreshText.font = Font.systemFont(12);
 
@@ -81,6 +80,7 @@ Script.complete();
 /////////////////
 // GEOLOCATION //
 /////////////////
+
 async function getLocationInfo() {
   Location.setAccuracyToThreeKilometers();
   const { latitude, longitude } = await Location.current();
@@ -200,8 +200,9 @@ function getYearlyDaylightInfo() {
 //////////
 // UTIL //
 //////////
+
 function lengthMsToHHMM(lengthMs) {
-  return format(new Date(lengthMs), `HH"h" mm"m"`, {
+  return SmallDate.format(new Date(lengthMs), `HH"h" mm"m"`, {
     timeZone: "Etc/Utc",
   });
 }
@@ -216,7 +217,7 @@ function lengthMsToDeltaStr(lengthMs) {
 
   return (
     sign +
-    format(new Date(lengthMs), `m"m" ss"s"`, {
+    SmallDate.format(new Date(lengthMs), `m"m" ss"s"`, {
       timeZone: "Etc/Utc",
     })
   );
@@ -233,107 +234,4 @@ async function log(message) {
   } catch (e) {
     console.error(e);
   }
-}
-
-// https://github.com/robinweser/small-date/blob/6224f7d99fa6b57783859744e9cd242b82a33e27/src/format.js
-function format(date, pattern, config) {
-  const PATTERN_REGEX = /(M|y|d|D|h|H|m|s|S|G|Z|P|a)+/g;
-  const ESCAPE_REGEX = /\\"|"((?:\\"|[^"])*)"|(\+)/g;
-
-  const optionNames = {
-    y: "year",
-    M: "month",
-    d: "day",
-    D: "weekday",
-    S: "fractionalSecondDigits",
-    G: "era",
-    Z: "timeZoneName",
-    P: "dayPeriod",
-    a: "hour12",
-    h: "hour",
-    H: "hour",
-    m: "minute",
-    s: "second",
-  };
-
-  const values = {
-    y: ["numeric", "2-digit", undefined, "numeric"],
-    M: ["narrow", "2-digit", "short", "long"],
-    d: ["numeric", "2-digit"],
-    D: ["narrow", "short", "long"],
-    S: [1, 2, 3],
-    G: ["narrow", "short", "long"],
-    Z: ["short", "long"],
-    P: ["narrow", "short", "long"],
-    a: [true],
-    h: ["numeric", "2-digit"],
-    H: ["numeric", "2-digit"],
-    m: ["numeric", "2-digit"],
-    s: ["numeric", "2-digit"],
-  };
-
-  function padIf(condition, value, length) {
-    return condition && length === 2 && value / 10 < 1 ? "0" + value : value;
-  }
-
-  function formatType(date, type, length, { locale, timeZone } = {}) {
-    const option = optionNames[type];
-    const value = values[type][length - 1];
-
-    if (!value) {
-      return;
-    }
-
-    const options = {
-      [option]: value,
-      timeZone,
-    };
-
-    if (type === "a") {
-      return Intl.DateTimeFormat(locale, {
-        ...options,
-        hour: "numeric",
-      })
-        .formatToParts(date)
-        .pop().value;
-    }
-
-    if (type === "G" || type === "Z") {
-      return Intl.DateTimeFormat(locale, options).formatToParts(date).pop()
-        .value;
-    }
-
-    if (type === "H" || type === "h") {
-      return Intl.DateTimeFormat("en-GB", {
-        ...options,
-        hourCycle: type === "H" ? "h23" : "h11",
-      })
-        .format(date)
-        .toLocaleLowerCase()
-        .replace(" am", "")
-        .replace(" pm", "");
-    }
-
-    return padIf(
-      ["m", "s"].includes(type) && value === "2-digit",
-      Intl.DateTimeFormat(locale, options).format(date),
-      2,
-    );
-  }
-
-  return pattern
-    .split(ESCAPE_REGEX)
-    .filter((sub) => sub !== undefined)
-    .map((sub, index) => {
-      // keep escaped strings as is
-      if (index % 2 !== 0) {
-        return sub;
-      }
-
-      return sub.replace(PATTERN_REGEX, (match) => {
-        const type = match.charAt(0);
-        return formatType(date, type, match.length, config) || match;
-      });
-    })
-    .join("");
 }
