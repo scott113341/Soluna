@@ -1,9 +1,5 @@
-// Variables used by Scriptable.
-// These must be at the very top of the file. Do not edit.
-// icon-color: deep-brown; icon-glyph: magic;
-
-const SunCalc = importModule("vendor/sun-calc.js");
-const SmallDate = importModule("vendor/small-date.js");
+import SunCalc from "suncalc3";
+import { format } from "./vendor/small-date/index.js";
 
 const NOW = new Date();
 
@@ -69,7 +65,7 @@ moonText.font = Font.systemFont(14);
 stack.addSpacer(8);
 
 const refreshText = stack.addText(
-  `Refreshed ${SmallDate.format(new Date(), "HH:mm MMM d")} in ${locationStr}`,
+  `Refreshed ${format(new Date(), "HH:mm MMM d")} in ${locationStr}`,
 );
 refreshText.font = Font.systemFont(12);
 
@@ -202,7 +198,7 @@ function getYearlyDaylightInfo() {
 //////////
 
 function lengthMsToHHMM(lengthMs) {
-  return SmallDate.format(new Date(lengthMs), `HH"h" mm"m"`, {
+  return format(new Date(lengthMs), `HH"h" mm"m"`, {
     timeZone: "Etc/Utc",
   });
 }
@@ -217,7 +213,7 @@ function lengthMsToDeltaStr(lengthMs) {
 
   return (
     sign +
-    SmallDate.format(new Date(lengthMs), `m"m" ss"s"`, {
+    format(new Date(lengthMs), `m"m" ss"s"`, {
       timeZone: "Etc/Utc",
     })
   );
@@ -226,12 +222,14 @@ function lengthMsToDeltaStr(lengthMs) {
 async function log(message) {
   console.log(message);
 
-  try {
-    const req = new Request("http://192.168.2.14:3000/logs");
-    req.method = "POST";
-    req.body = JSON.stringify(message);
-    await req.loadString();
-  } catch (e) {
-    console.error(e);
+  if (process.env.LOG_URL) {
+    try {
+      const req = new Request(process.env.LOG_URL);
+      req.method = "POST";
+      req.body = JSON.stringify(message);
+      await req.loadString();
+    } catch (e) {
+      console.error(e);
+    }
   }
 }

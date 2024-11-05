@@ -1,32 +1,25 @@
 import http from "http";
 
-let logLines = [];
-
-const server = http.createServer((req, res) => {
-  if (req.method === "POST" && req.url === "/logs") {
+const logServer = http.createServer((req, res) => {
+  if (req.method === "POST") {
     let body = "";
 
-    req.on("data", (chunk) => {
-      body += chunk;
-    });
+    req.on("data", (chunk) => (body += chunk));
 
     req.on("end", () => {
-      logLines.push(body);
-      console.log(`${getCurrentTime()}: ${body}`);
+      console.log(`${getCurrentTimestamp()}: ${body}`);
       res.writeHead(200, { "Content-Type": "text/plain" });
       res.end("Log received\n");
     });
   } else {
     res.writeHead(404, { "Content-Type": "text/plain" });
-    res.end("Not Found\n");
+    res.end("Not found\n");
   }
 });
 
-server.listen(3000, "0.0.0.0", () => {
-  console.log(`Server started`);
-});
+logServer.listen(3000, "0.0.0.0", () => console.log(`Server started`));
 
-function getCurrentTime() {
+function getCurrentTimestamp() {
   const now = new Date();
   const hours = String(now.getHours()).padStart(2, "0");
   const minutes = String(now.getMinutes()).padStart(2, "0");

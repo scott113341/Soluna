@@ -1,5 +1,14 @@
 {
+  "scripts": {
+    "build": "webpack --config webpack.build.mjs",
+    "dev": "webpack --config webpack.dev.mjs --watch"
+  },
   "dependencies": {
-    "prettier": "^3.3.3"
+    "dotenv": "^16.4.5",
+    "prettier": "^3.3.3",
+    "suncalc3": "^2.0.5",
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4",
+    "zx": "^8.2.0"
   }
 }
