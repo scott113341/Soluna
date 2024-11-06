@@ -1473,6 +1473,11 @@ function getSunMoonInfo(date, lat, lng) {
   // Moon phase
   const mp = suncalc3__WEBPACK_IMPORTED_MODULE_0__.getMoonIllumination(date.valueOf());
 
+  // Switch moon emojis to non-face ones
+  let moonEmoji = mp.phase.emoji;
+  if (moonEmoji === "🌚") moonEmoji = "🌑";
+  if (moonEmoji === "🌝") moonEmoji = "🌕";
+
   return {
     sunrise,
     sunriseStr,
@@ -1486,7 +1491,7 @@ function getSunMoonInfo(date, lat, lng) {
     moonsetStr,
     moonFraction: mp.fraction,
     moonPhase: mp.phase.name,
-    moonEmoji: mp.phase.emoji,
+    moonEmoji,
   };
 }
 
