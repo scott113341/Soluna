@@ -4,6 +4,109 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./node_modules/small-date/es/format.js":
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ format)
+/* harmony export */ });
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var PATTERN_REGEX = /(M|y|d|D|h|H|m|s|S|G|Z|P|a)+/g;
+var ESCAPE_REGEX = /\\"|"((?:\\"|[^"])*)"|(\+)/g;
+var optionNames = {
+  y: 'year',
+  M: 'month',
+  d: 'day',
+  D: 'weekday',
+  S: 'fractionalSecondDigits',
+  G: 'era',
+  Z: 'timeZoneName',
+  P: 'dayPeriod',
+  a: 'hour12',
+  h: 'hour',
+  H: 'hour',
+  m: 'minute',
+  s: 'second'
+};
+var values = {
+  y: ['numeric', '2-digit', undefined, 'numeric'],
+  M: ['narrow', '2-digit', 'short', 'long'],
+  d: ['numeric', '2-digit'],
+  D: ['narrow', 'short', 'long'],
+  S: [1, 2, 3],
+  G: ['narrow', 'short', 'long'],
+  Z: ['short', 'long'],
+  P: ['narrow', 'short', 'long'],
+  a: [true],
+  h: ["numeric", "2-digit"],
+  H: ["numeric", "2-digit"],
+  m: ["numeric", "2-digit"],
+  s: ["numeric", "2-digit"]
+};
+
+function padIf(condition, value, length) {
+  return condition && length === 2 && value / 10 < 1 ? '0' + value : value;
+}
+
+function formatType(date, type, length) {
+  var _options;
+
+  var _ref = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {},
+      locale = _ref.locale,
+      timeZone = _ref.timeZone;
+
+  var option = optionNames[type];
+  var value = values[type][length - 1];
+
+  if (!value) {
+    return;
+  }
+
+  var options = (_options = {}, _defineProperty(_options, option, value), _defineProperty(_options, "timeZone", timeZone), _options);
+
+  if (type === 'a') {
+    return Intl.DateTimeFormat(locale, _objectSpread(_objectSpread({}, options), {}, {
+      hour: 'numeric'
+    })).formatToParts(date).pop().value;
+  }
+
+  if (type === 'G' || type === 'Z') {
+    return Intl.DateTimeFormat(locale, options).formatToParts(date).pop().value;
+  }
+
+  if (type === 'H' || type === 'h') {
+    return Intl.DateTimeFormat('en-GB', _objectSpread(_objectSpread({}, options), {}, {
+      hourCycle: type === "H" ? "h23" : "h11"
+    })).format(date).toLocaleLowerCase().replace(" am", "").replace(" pm", "");
+  }
+
+  return padIf(['m', 's'].includes(type) && value === '2-digit', Intl.DateTimeFormat(locale, options).format(date), 2);
+}
+
+function format(date, pattern, config) {
+  return pattern.split(ESCAPE_REGEX).filter(function (sub) {
+    return sub !== undefined;
+  }).map(function (sub, index) {
+    // keep escaped strings as is
+    if (index % 2 !== 0) {
+      return sub;
+    }
+
+    return sub.replace(PATTERN_REGEX, function (match) {
+      var type = match.charAt(0);
+      return formatType(date, type, match.length, config) || match;
+    });
+  }).join('');
+}
+
+/***/ }),
+
 /***/ "./node_modules/suncalc3/suncalc.js":
 /***/ ((module) => {
 
@@ -1245,123 +1348,13 @@
 
 /***/ }),
 
-/***/ "./vendor/small-date/index.js":
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  format: () => (/* reexport */ format)
-});
-
-;// ./vendor/small-date/format.js
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-var PATTERN_REGEX = /(M|y|d|D|h|H|m|s|S|G|Z|P|a)+/g;
-var ESCAPE_REGEX = /\\"|"((?:\\"|[^"])*)"|(\+)/g;
-var optionNames = {
-  y: 'year',
-  M: 'month',
-  d: 'day',
-  D: 'weekday',
-  S: 'fractionalSecondDigits',
-  G: 'era',
-  Z: 'timeZoneName',
-  P: 'dayPeriod',
-  a: 'hour12',
-  h: 'hour',
-  H: 'hour',
-  m: 'minute',
-  s: 'second'
-};
-var values = {
-  y: ['numeric', '2-digit', undefined, 'numeric'],
-  M: ['narrow', '2-digit', 'short', 'long'],
-  d: ['numeric', '2-digit'],
-  D: ['narrow', 'short', 'long'],
-  S: [1, 2, 3],
-  G: ['narrow', 'short', 'long'],
-  Z: ['short', 'long'],
-  P: ['narrow', 'short', 'long'],
-  a: [true],
-  h: ["numeric", "2-digit"],
-  H: ["numeric", "2-digit"],
-  m: ["numeric", "2-digit"],
-  s: ["numeric", "2-digit"]
-};
-
-function padIf(condition, value, length) {
-  return condition && length === 2 && value / 10 < 1 ? '0' + value : value;
-}
-
-function formatType(date, type, length) {
-  var _options;
-
-  var _ref = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {},
-      locale = _ref.locale,
-      timeZone = _ref.timeZone;
-
-  var option = optionNames[type];
-  var value = values[type][length - 1];
-
-  if (!value) {
-    return;
-  }
-
-  var options = (_options = {}, _defineProperty(_options, option, value), _defineProperty(_options, "timeZone", timeZone), _options);
-
-  if (type === 'a') {
-    return Intl.DateTimeFormat(locale, _objectSpread(_objectSpread({}, options), {}, {
-      hour: 'numeric'
-    })).formatToParts(date).pop().value;
-  }
-
-  if (type === 'G' || type === 'Z') {
-    return Intl.DateTimeFormat(locale, options).formatToParts(date).pop().value;
-  }
-
-  if (type === 'H' || type === 'h') {
-    return Intl.DateTimeFormat('en-GB', _objectSpread(_objectSpread({}, options), {}, {
-      hourCycle: type === "H" ? "h23" : "h11"
-    })).format(date).toLocaleLowerCase().replace(" am", "").replace(" pm", "");
-  }
-
-  return padIf(['m', 's'].includes(type) && value === '2-digit', Intl.DateTimeFormat(locale, options).format(date), 2);
-}
-
-function format(date, pattern, config) {
-  return pattern.split(ESCAPE_REGEX).filter(function (sub) {
-    return sub !== undefined;
-  }).map(function (sub, index) {
-    // keep escaped strings as is
-    if (index % 2 !== 0) {
-      return sub;
-    }
-
-    return sub.replace(PATTERN_REGEX, function (match) {
-      var type = match.charAt(0);
-      return formatType(date, type, match.length, config) || match;
-    });
-  }).join('');
-}
-;// ./vendor/small-date/index.js
-
-
-
-/***/ }),
-
 /***/ "./main.mjs":
 /***/ ((__webpack_module__, __unused_webpack___webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
 /* harmony import */ var suncalc3__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./node_modules/suncalc3/suncalc.js");
-/* harmony import */ var _vendor_small_date_index_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./vendor/small-date/index.js");
+/* harmony import */ var small_date__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__("./node_modules/small-date/es/format.js");
 
 
 
@@ -1429,7 +1422,7 @@ moonText.font = Font.systemFont(14);
 stack.addSpacer(8);
 
 const refreshText = stack.addText(
-  `Refreshed ${(0,_vendor_small_date_index_js__WEBPACK_IMPORTED_MODULE_1__.format)(new Date(), "HH:mm MMM d")} in ${locationStr}`,
+  `Refreshed ${(0,small_date__WEBPACK_IMPORTED_MODULE_1__["default"])(new Date(), "HH:mm MMM d")} in ${locationStr}`,
 );
 refreshText.font = Font.systemFont(12);
 
@@ -1562,7 +1555,7 @@ function getYearlyDaylightInfo() {
 //////////
 
 function lengthMsToHHMM(lengthMs) {
-  return (0,_vendor_small_date_index_js__WEBPACK_IMPORTED_MODULE_1__.format)(new Date(lengthMs), `HH"h" mm"m"`, {
+  return (0,small_date__WEBPACK_IMPORTED_MODULE_1__["default"])(new Date(lengthMs), `HH"h" mm"m"`, {
     timeZone: "Etc/Utc",
   });
 }
@@ -1577,7 +1570,7 @@ function lengthMsToDeltaStr(lengthMs) {
 
   return (
     sign +
-    (0,_vendor_small_date_index_js__WEBPACK_IMPORTED_MODULE_1__.format)(new Date(lengthMs), `m"m" ss"s"`, {
+    (0,small_date__WEBPACK_IMPORTED_MODULE_1__["default"])(new Date(lengthMs), `m"m" ss"s"`, {
       timeZone: "Etc/Utc",
     })
   );

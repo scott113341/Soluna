@@ -1,5 +1,5 @@
 import SunCalc from "suncalc3";
-import { format } from "./vendor/small-date/index.js";
+import { format } from "small-date";
 
 const NOW = new Date();
 
