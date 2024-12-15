@@ -1363,7 +1363,6 @@ __webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependen
 ///////////////
 
 const NOW = new Date();
-log(NOW);
 
 const DEVELOPMENT = "production" === "development";
 const PRODUCTION = (/* unused pure expression or super */ null && ("production" === "production"));
