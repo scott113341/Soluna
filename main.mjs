@@ -6,7 +6,6 @@ import { format } from "small-date";
 ///////////////
 
 const NOW = new Date();
-log(NOW);
 
 const DEVELOPMENT = process.env.NODE_ENV === "development";
 const PRODUCTION = process.env.NODE_ENV === "production";
