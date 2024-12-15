@@ -5,7 +5,7 @@ various info about the sun, moon, and day length. I made it because all similar
 apps I tried were ad-filled, require you to sign up for a premium subscription,
 or just weren't customizable enough to show the exact info I want to see.
 
- <img src="screenshot.jpeg" alt="A screenshot of the widget" width="350" />
+<img src="screenshot.jpeg" alt="A screenshot of the widget" width="350" />
 
 The widget shows:
 
@@ -19,7 +19,8 @@ The widget shows:
 
 ### Installation
 
-TODO
+TODO actually good instructions, but you essentially need to copy
+`dist/Soluna.mjs` into Scriptable, either via the UI or iCloud.
 
 ### Development
 
@@ -34,4 +35,5 @@ TODO
    your desired endpoint. A simple server that just prints everything POSTed
    to it is included and can be started with `node log-server.mjs`.
 6. Run `npm run dev`, which will watch for changes to `main.mjs` and build to
-   `dist/Soluna.mjs`
+   `dist/Soluna (Dev).mjs`
+7. Run `npm run build` to write a production build to `dist/Soluna.mjs`
