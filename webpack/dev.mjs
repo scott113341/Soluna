@@ -6,7 +6,7 @@ import {
   ScriptableFrontMatterBannerPlugin,
   SolunaEnvironmentPlugin,
   WEBPACK_ENTRY,
-} from "./webpack.common.mjs";
+} from "./common.mjs";
 
 const OUTPUT_FILE_NAME = "Soluna (Dev).mjs";
 const OUTPUT_FILE_PATH = path.join(OUTPUT_DIR_PATH, OUTPUT_FILE_NAME);

@@ -4,7 +4,11 @@ import webpack from "webpack";
 import "dotenv/config";
 
 const THIS_FILE = fileURLToPath(import.meta.url);
-export const OUTPUT_DIR_PATH = path.resolve(path.dirname(THIS_FILE), "dist");
+export const OUTPUT_DIR_PATH = path.resolve(
+  path.dirname(THIS_FILE),
+  "..",
+  "dist",
+);
 
 export const WEBPACK_ENTRY = "./main.mjs";
 
