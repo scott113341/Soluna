@@ -7,14 +7,16 @@ import { format } from "small-date";
 
 const NOW = new Date();
 
-const DEVELOPMENT = process.env.NODE_ENV === "development";
-const PRODUCTION = process.env.NODE_ENV === "production";
+const ENVIRONMENT = process.env.NODE_ENV;
+const DEVELOPMENT = ENVIRONMENT === "development";
+const PRODUCTION = ENVIRONMENT === "production";
 
 const LOCAL_FILE_MANAGER = FileManager.local();
 const CACHE_DIR = LOCAL_FILE_MANAGER.cacheDirectory();
 
 const LOCATION_TIMEOUT_MS = 5000;
-const LOCATION_CACHE_FILE_PATH = CACHE_DIR + "/soluna.location.json";
+const LOCATION_CACHE_FILE_PATH =
+  CACHE_DIR + `/soluna.${ENVIRONMENT}.location.json`;
 const LOCATION_CACHE_VERSION = 1;
 
 ////////////////////////////

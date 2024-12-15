@@ -1364,14 +1364,16 @@ __webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependen
 
 const NOW = new Date();
 
-const DEVELOPMENT = "production" === "development";
-const PRODUCTION = (/* unused pure expression or super */ null && ("production" === "production"));
+const ENVIRONMENT = "production";
+const DEVELOPMENT = ENVIRONMENT === "development";
+const PRODUCTION = ENVIRONMENT === "production";
 
 const LOCAL_FILE_MANAGER = FileManager.local();
 const CACHE_DIR = LOCAL_FILE_MANAGER.cacheDirectory();
 
 const LOCATION_TIMEOUT_MS = 5000;
-const LOCATION_CACHE_FILE_PATH = CACHE_DIR + "/soluna.location.json";
+const LOCATION_CACHE_FILE_PATH =
+  CACHE_DIR + `/soluna.${ENVIRONMENT}.location.json`;
 const LOCATION_CACHE_VERSION = 1;
 
 ////////////////////////////
