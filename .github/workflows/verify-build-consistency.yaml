@@ -1,7 +1,7 @@
 name: Verify Build Consistency
 
 on:
-  pull_request:
+  push:
 
 jobs:
   check-build:
