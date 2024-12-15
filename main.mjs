@@ -1,7 +1,17 @@
 import SunCalc from "suncalc3";
 import { format } from "small-date";
 
+///////////////
+// CONSTANTS //
+///////////////
+
 const NOW = new Date();
+
+const DEVELOPMENT = process.env.NODE_ENV === "development";
+const PRODUCTION = process.env.NODE_ENV === "production";
+
+const LOCAL_FILE_MANAGER = FileManager.local();
+const CACHE_DIR = LOCAL_FILE_MANAGER.cacheDirectory();
 
 ////////////////////////////
 // GET AND CALCULATE INFO //
@@ -68,6 +78,13 @@ const refreshText = stack.addText(
   `Refreshed ${format(new Date(), "HH:mm MMM d")} in ${locationStr}`,
 );
 refreshText.font = Font.systemFont(12);
+if (DEVELOPMENT) {
+  refreshText.textColor = new Color("#ff0000", 100);
+}
+
+///////////////////
+// WIDGET CONFIG //
+///////////////////
 
 widget.presentMedium();
 Script.setWidget(widget);
@@ -227,7 +244,7 @@ function lengthMsToDeltaStr(lengthMs) {
 async function log(message) {
   console.log(message);
 
-  if (process.env.LOG_URL) {
+  if (DEVELOPMENT && process.env.LOG_URL) {
     try {
       const req = new Request(process.env.LOG_URL);
       req.method = "POST";

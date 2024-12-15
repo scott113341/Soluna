@@ -1358,7 +1358,17 @@ __webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependen
 
 
 
+///////////////
+// CONSTANTS //
+///////////////
+
 const NOW = new Date();
+
+const DEVELOPMENT = "production" === "development";
+const PRODUCTION = (/* unused pure expression or super */ null && ("production" === "production"));
+
+const LOCAL_FILE_MANAGER = FileManager.local();
+const CACHE_DIR = LOCAL_FILE_MANAGER.cacheDirectory();
 
 ////////////////////////////
 // GET AND CALCULATE INFO //
@@ -1425,6 +1435,13 @@ const refreshText = stack.addText(
   `Refreshed ${(0,small_date__WEBPACK_IMPORTED_MODULE_1__["default"])(new Date(), "HH:mm MMM d")} in ${locationStr}`,
 );
 refreshText.font = Font.systemFont(12);
+if (DEVELOPMENT) {
+  refreshText.textColor = new Color("#ff0000", 100);
+}
+
+///////////////////
+// WIDGET CONFIG //
+///////////////////
 
 widget.presentMedium();
 Script.setWidget(widget);
@@ -1584,7 +1601,7 @@ function lengthMsToDeltaStr(lengthMs) {
 async function log(message) {
   console.log(message);
 
-  if (true) {
+  if (DEVELOPMENT && "http://192.168.2.14:3000") {
     try {
       const req = new Request("http://192.168.2.14:3000");
       req.method = "POST";
