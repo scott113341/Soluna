@@ -1370,6 +1370,10 @@ const PRODUCTION = (/* unused pure expression or super */ null && ("production" 
 const LOCAL_FILE_MANAGER = FileManager.local();
 const CACHE_DIR = LOCAL_FILE_MANAGER.cacheDirectory();
 
+const LOCATION_TIMEOUT_MS = 5000;
+const LOCATION_CACHE_FILE_PATH = CACHE_DIR + "/soluna.location.json";
+const LOCATION_CACHE_VERSION = 1;
+
 ////////////////////////////
 // GET AND CALCULATE INFO //
 ////////////////////////////
@@ -1392,7 +1396,7 @@ const { dayDeltaMsStr, sunriseDeltaStr, sunsetDeltaStr } = getDeltas(
 // Get yearly daylight min/max
 const { minMs, minStr, maxMs, maxStr } = getYearlyDaylightInfo();
 
-// Find current "percent progress" betweeen yearly daylight min/max
+// Find current "percent progress" between yearly daylight min/max
 const percentProgress = (sunMoonInfo.dayLengthMs - minMs) / (maxMs - minMs);
 const percentProgressStr =
   (percentProgress * 100).toPrecision(3).toString() + "%";
@@ -1452,6 +1456,29 @@ Script.complete();
 /////////////////
 
 async function getLocationInfo() {
+  // Try looking up location info normally, but race with a timeout
+  let locationInfo = await Promise.race([
+    lookupLocationInfo(),
+    delay(LOCATION_TIMEOUT_MS),
+  ]);
+
+  // Get location from cache if timeout was reached
+  if (!locationInfo) {
+    log(`Fell back to cached location after ${LOCATION_TIMEOUT_MS}ms`);
+    locationInfo = getCachedLocationInfo();
+
+    // Just try a real lookup again if cache didn't return anything
+    if (!locationInfo) {
+      log("Trying a lookup again");
+      locationInfo = await lookupLocationInfo();
+    }
+  }
+
+  return locationInfo;
+}
+
+// Does an actual location lookup using the Scriptable/iOS geolocation API
+async function lookupLocationInfo() {
   Location.setAccuracyToThreeKilometers();
   const { latitude, longitude } = await Location.current();
   const locations = await Location.reverseGeocode(latitude, longitude);
@@ -1460,7 +1487,43 @@ async function getLocationInfo() {
     ? `${location.locality}, ${location.administrativeArea}`
     : "Unknown";
 
-  return { latitude, longitude, location, locationStr };
+  const locationInfo = { latitude, longitude, location, locationStr };
+  cacheLocationInfo(locationInfo);
+
+  return locationInfo;
+}
+
+function getCachedLocationInfo() {
+  try {
+    const locationInfo = JSON.parse(
+      LOCAL_FILE_MANAGER.readString(LOCATION_CACHE_FILE_PATH),
+    );
+
+    log({ locationInfo, LOCATION_CACHE_VERSION });
+
+    if (locationInfo.version !== LOCATION_CACHE_VERSION) {
+      throw new Error(
+        `Cached location version is ${locationInfo.version}; expected ${LOCATION_CACHE_VERSION}`,
+      );
+    } else {
+      return locationInfo;
+    }
+  } catch (e) {
+    log(`Error reading cached location: ${e.message}`);
+  }
+
+  return null;
+}
+
+function cacheLocationInfo(locationInfo) {
+  LOCAL_FILE_MANAGER.writeString(
+    LOCATION_CACHE_FILE_PATH,
+    JSON.stringify({
+      version: LOCATION_CACHE_VERSION,
+      cachedAt: NOW,
+      ...locationInfo,
+    }),
+  );
 }
 
 //////////////////
@@ -1598,6 +1661,11 @@ function lengthMsToDeltaStr(lengthMs) {
   );
 }
 
+// Note that there is no setTimeout in this environment
+async function delay(ms) {
+  return new Promise((resolve) => Timer.schedule(ms, false, resolve));
+}
+
 async function log(message) {
   console.log(message);
 
@@ -1607,9 +1675,7 @@ async function log(message) {
       req.method = "POST";
       req.body = JSON.stringify(message);
       await req.loadString();
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (_e) {}
   }
 }
 
