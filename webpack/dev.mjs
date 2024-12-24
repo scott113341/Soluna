@@ -32,9 +32,10 @@ export default {
       this.hooks.done.tap("DonePlugin", async (stats) => {
         if (COPY_BUILD_TO_ICLOUD) {
           await fs.copyFile(OUTPUT_FILE_PATH, ICLOUD_SCRIPTABLE_PATH);
+          console.log(
+            `Copied ${OUTPUT_FILE_PATH} to ${ICLOUD_SCRIPTABLE_PATH}`,
+          );
         }
-
-        console.log(`Copied ${OUTPUT_FILE_PATH} to ${ICLOUD_SCRIPTABLE_PATH}`);
       });
     },
   ],
