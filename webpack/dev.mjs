@@ -1,5 +1,5 @@
 import path from "node:path";
-import { $ } from "zx";
+import fs from "node:fs/promises";
 import "dotenv/config";
 import {
   OUTPUT_DIR_PATH,
@@ -31,7 +31,7 @@ export default {
     function () {
       this.hooks.done.tap("DonePlugin", async (stats) => {
         if (COPY_BUILD_TO_ICLOUD) {
-          await $`cp ${OUTPUT_FILE_PATH} ${ICLOUD_SCRIPTABLE_PATH}`;
+          await fs.copyFile(OUTPUT_FILE_PATH, ICLOUD_SCRIPTABLE_PATH);
         }
 
         console.log(`Copied ${OUTPUT_FILE_PATH} to ${ICLOUD_SCRIPTABLE_PATH}`);

@@ -10,7 +10,6 @@
     "small-date": "^2.0.1",
     "suncalc3": "^2.0.5",
     "webpack": "^5.97.1",
-    "webpack-cli": "^5.1.4",
-    "zx": "^8.2.4"
+    "webpack-cli": "^5.1.4"
   }
 }
