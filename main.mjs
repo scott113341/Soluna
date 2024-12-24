@@ -23,78 +23,86 @@ const LOCATION_CACHE_VERSION = 1;
 // GET AND CALCULATE INFO //
 ////////////////////////////
 
-// Get info for today
-const { latitude, longitude, locationStr } = await getLocationInfo();
-const sunMoonInfo = getSunMoonInfo(NOW, latitude, longitude);
+(async () => {
+  await main();
+  configureWidget();
+})();
 
-// Get info for yesterday
-const yesterday = new Date(NOW);
-yesterday.setDate(NOW.getDate() - 1);
-const yesterdaySunMoonInfo = getSunMoonInfo(yesterday, latitude, longitude);
+async function main() {
+  // Get info for today
+  const { latitude, longitude, locationStr } = await getLocationInfo();
+  const sunMoonInfo = getSunMoonInfo(NOW, latitude, longitude);
 
-// Calculate deltas between today/yesterday
-const { dayDeltaMsStr, sunriseDeltaStr, sunsetDeltaStr } = getDeltas(
-  sunMoonInfo,
-  yesterdaySunMoonInfo,
-);
+  // Get info for yesterday
+  const yesterday = new Date(NOW);
+  yesterday.setDate(NOW.getDate() - 1);
+  const yesterdaySunMoonInfo = getSunMoonInfo(yesterday, latitude, longitude);
 
-// Get yearly daylight min/max
-const { minMs, minStr, maxMs, maxStr } = getYearlyDaylightInfo();
+  // Calculate deltas between today/yesterday
+  const { dayDeltaMsStr, sunriseDeltaStr, sunsetDeltaStr } = getDeltas(
+    sunMoonInfo,
+    yesterdaySunMoonInfo,
+  );
 
-// Find current "percent progress" between yearly daylight min/max
-const percentProgress = (sunMoonInfo.dayLengthMs - minMs) / (maxMs - minMs);
-const percentProgressStr =
-  (percentProgress * 100).toPrecision(3).toString() + "%";
+  // Get yearly daylight min/max
+  const { minMs, minStr, maxMs, maxStr } = getYearlyDaylightInfo();
 
-////////////
-// LAYOUT //
-////////////
+  // Find current "percent progress" between yearly daylight min/max
+  const percentProgress = (sunMoonInfo.dayLengthMs - minMs) / (maxMs - minMs);
+  const percentProgressStr =
+    (percentProgress * 100).toPrecision(3).toString() + "%";
 
-const widget = new ListWidget();
-const stack = widget.addStack();
-stack.layoutVertically();
-const monoFont = new Font("CourierNewPS-BoldMT", 18);
+  ////////////
+  // LAYOUT //
+  ////////////
 
-[
-  stack.addText(`Daytime: ${sunMoonInfo.dayLengthStr} (${dayDeltaMsStr})`),
-  stack.addText(`Sunrise: ${sunMoonInfo.sunriseStr}   (${sunriseDeltaStr})`),
-  stack.addText(`Sunset:  ${sunMoonInfo.sunsetStr}   (${sunsetDeltaStr})`),
-].forEach((text) => (text.font = monoFont));
+  const widget = new ListWidget();
+  const stack = widget.addStack();
+  stack.layoutVertically();
+  const monoFont = new Font("CourierNewPS-BoldMT", 18);
 
-stack.addSpacer(8);
+  [
+    stack.addText(`Daytime: ${sunMoonInfo.dayLengthStr} (${dayDeltaMsStr})`),
+    stack.addText(`Sunrise: ${sunMoonInfo.sunriseStr}   (${sunriseDeltaStr})`),
+    stack.addText(`Sunset:  ${sunMoonInfo.sunsetStr}   (${sunsetDeltaStr})`),
+  ].forEach((text) => (text.font = monoFont));
 
-const minMaxProgressText = stack.addText(
-  `${minStr} - ${maxStr} (${percentProgressStr})`,
-);
-minMaxProgressText.font = Font.systemFont(14);
+  stack.addSpacer(8);
 
-const moonData = [
-  sunMoonInfo.moonEmoji,
-  sunMoonInfo.moonPhase,
-  `↑${sunMoonInfo.moonriseStr}`,
-  `↓${sunMoonInfo.moonsetStr}`,
-  `(${Math.round(sunMoonInfo.moonFraction * 100)}%)`,
-];
-const moonText = stack.addText(moonData.join(" "));
-moonText.font = Font.systemFont(14);
+  const minMaxProgressText = stack.addText(
+    `${minStr} - ${maxStr} (${percentProgressStr})`,
+  );
+  minMaxProgressText.font = Font.systemFont(14);
 
-stack.addSpacer(8);
+  const moonData = [
+    sunMoonInfo.moonEmoji,
+    sunMoonInfo.moonPhase,
+    `↑${sunMoonInfo.moonriseStr}`,
+    `↓${sunMoonInfo.moonsetStr}`,
+    `(${Math.round(sunMoonInfo.moonFraction * 100)}%)`,
+  ];
+  const moonText = stack.addText(moonData.join(" "));
+  moonText.font = Font.systemFont(14);
 
-const refreshText = stack.addText(
-  `Refreshed ${format(new Date(), "HH:mm MMM d")} in ${locationStr}`,
-);
-refreshText.font = Font.systemFont(12);
-if (DEVELOPMENT) {
-  refreshText.textColor = new Color("#ff0000", 100);
+  stack.addSpacer(8);
+
+  const refreshText = stack.addText(
+    `Refreshed ${format(new Date(), "HH:mm MMM d")} in ${locationStr}`,
+  );
+  refreshText.font = Font.systemFont(12);
+  if (DEVELOPMENT) {
+    refreshText.textColor = new Color("#ff0000", 100);
+  }
 }
-
 ///////////////////
 // WIDGET CONFIG //
 ///////////////////
 
-widget.presentMedium();
-Script.setWidget(widget);
-Script.complete();
+function configureWidget() {
+  widget.presentMedium();
+  Script.setWidget(widget);
+  Script.complete();
+}
 
 /////////////////
 // GEOLOCATION //

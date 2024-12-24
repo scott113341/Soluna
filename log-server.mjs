@@ -1,4 +1,4 @@
-import http from "http";
+import http from "node:http";
 
 const logServer = http.createServer((req, res) => {
   if (req.method === "POST") {
