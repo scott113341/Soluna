@@ -7,7 +7,7 @@ import * as esbuild from "esbuild";
 import {
   OUTPUT_DIR_PATH,
   getScriptableBanner,
-  WEBPACK_ENTRY,
+  ESBUILD_ENTRY,
 } from "./common.mjs";
 
 const OUTPUT_FILE_NAME = "Soluna (Dev).mjs";
@@ -17,7 +17,7 @@ const ICLOUD_SCRIPTABLE_PATH = process.env.ICLOUD_SCRIPTABLE_PATH || null;
 const COPY_BUILD_TO_ICLOUD = !!ICLOUD_SCRIPTABLE_PATH;
 
 let ctx = await esbuild.context({
-  entryPoints: [WEBPACK_ENTRY],
+  entryPoints: [ESBUILD_ENTRY],
   bundle: true,
   outfile: OUTPUT_FILE_PATH,
   banner: {

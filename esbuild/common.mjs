@@ -8,7 +8,7 @@ export const OUTPUT_DIR_PATH = path.resolve(
   "dist",
 );
 
-export const WEBPACK_ENTRY = "./main.mjs";
+export const ESBUILD_ENTRY = "./main.mjs";
 
 // Scriptable requires this magic comment to be at the very top of the file
 export function getScriptableBanner(iconColor, iconGlyph) {

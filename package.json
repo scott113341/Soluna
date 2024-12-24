@@ -1,8 +1,8 @@
 {
   "name": "soluna",
   "scripts": {
-    "build": "./webpack/build.mjs",
-    "dev": "./webpack/dev.mjs"
+    "build": "./esbuild/build.mjs",
+    "dev": "./esbuild/dev.mjs"
   },
   "dependencies": {
     "dotenv": "^16.4.7",

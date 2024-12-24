@@ -5,13 +5,13 @@ import * as esbuild from "esbuild";
 import {
   OUTPUT_DIR_PATH,
   getScriptableBanner,
-  WEBPACK_ENTRY,
+  ESBUILD_ENTRY,
 } from "./common.mjs";
 
 const OUTPUT_FILE_NAME = "Soluna.mjs";
 
 const result = await esbuild.build({
-  entryPoints: [WEBPACK_ENTRY],
+  entryPoints: [ESBUILD_ENTRY],
   bundle: true,
   outfile: `${OUTPUT_DIR_PATH}/${OUTPUT_FILE_NAME}`,
   banner: {
