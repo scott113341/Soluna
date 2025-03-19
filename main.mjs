@@ -26,6 +26,7 @@ const LOCATION_CACHE_VERSION = 1;
 (async () => {
   try {
     const widget = await buildWidget();
+    widget.refreshAfterDate = justAfterMidnightTonight();
     widget.presentMedium();
     Script.setWidget(widget);
     Script.complete();
@@ -328,6 +329,14 @@ function lengthMsToDeltaStr(lengthMs) {
       timeZone: "Etc/Utc",
     })
   );
+}
+
+// Returns a Date at one minute after midnight tonight
+function justAfterMidnightTonight() {
+  const midnightTonight = new Date();
+  midnightTonight.setHours(0, 1, 0, 0);
+  midnightTonight.setDate(midnightTonight.getDate() + 1);
+  return midnightTonight;
 }
 
 // Note that there is no setTimeout in this environment
