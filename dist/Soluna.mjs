@@ -901,6 +901,7 @@
   (async () => {
     try {
       const widget = await buildWidget();
+      widget.refreshAfterDate = justAfterMidnightTonight();
       widget.presentMedium();
       Script.setWidget(widget);
       Script.complete();
@@ -1110,6 +1111,12 @@
     return sign + format(new Date(lengthMs), `m"m" ss"s"`, {
       timeZone: "Etc/Utc"
     });
+  }
+  function justAfterMidnightTonight() {
+    const midnightTonight = /* @__PURE__ */ new Date();
+    midnightTonight.setHours(0, 1, 0, 0);
+    midnightTonight.setDate(midnightTonight.getDate() + 1);
+    return midnightTonight;
   }
   async function delay(ms) {
     return new Promise((resolve) => Timer.schedule(ms, false, resolve));
