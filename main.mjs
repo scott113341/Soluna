@@ -19,16 +19,26 @@ const LOCATION_CACHE_FILE_PATH =
   CACHE_DIR + `/soluna.${ENVIRONMENT}.location.json`;
 const LOCATION_CACHE_VERSION = 1;
 
-////////////////////////////
-// GET AND CALCULATE INFO //
-////////////////////////////
+//////////
+// MAIN //
+//////////
 
 (async () => {
-  await main();
-  configureWidget();
+  try {
+    const widget = await buildWidget();
+    widget.presentMedium();
+    Script.setWidget(widget);
+    Script.complete();
+  } catch (e) {
+    console.log(e);
+  }
 })();
 
-async function main() {
+async function buildWidget() {
+  /////////////////////////////////////
+  // GET AND CALCULATE SUN/MOON INFO //
+  /////////////////////////////////////
+
   // Get info for today
   const { latitude, longitude, locationStr } = await getLocationInfo();
   const sunMoonInfo = getSunMoonInfo(NOW, latitude, longitude);
@@ -45,16 +55,19 @@ async function main() {
   );
 
   // Get yearly daylight min/max
-  const { minMs, minStr, maxMs, maxStr } = getYearlyDaylightInfo();
+  const { minMs, minStr, maxMs, maxStr } = getYearlyDaylightInfo(
+    latitude,
+    longitude,
+  );
 
   // Find current "percent progress" between yearly daylight min/max
   const percentProgress = (sunMoonInfo.dayLengthMs - minMs) / (maxMs - minMs);
   const percentProgressStr =
     (percentProgress * 100).toPrecision(3).toString() + "%";
 
-  ////////////
-  // LAYOUT //
-  ////////////
+  //////////////////
+  // BUILD WIDGET //
+  //////////////////
 
   const widget = new ListWidget();
   const stack = widget.addStack();
@@ -93,15 +106,8 @@ async function main() {
   if (DEVELOPMENT) {
     refreshText.textColor = new Color("#ff0000", 100);
   }
-}
-///////////////////
-// WIDGET CONFIG //
-///////////////////
 
-function configureWidget() {
-  widget.presentMedium();
-  Script.setWidget(widget);
-  Script.complete();
+  return widget;
 }
 
 /////////////////
@@ -263,7 +269,7 @@ function getDeltas(sunMoonInfo, yesterdaySunMoonInfo) {
   };
 }
 
-function getYearlyDaylightInfo() {
+function getYearlyDaylightInfo(latitude, longitude) {
   // Find min/max daylight
   let minMs = Infinity;
   let maxMs = -Infinity;

@@ -15,6 +15,9 @@ const OUTPUT_FILE_PATH = path.join(OUTPUT_DIR_PATH, OUTPUT_FILE_NAME);
 
 const ICLOUD_SCRIPTABLE_PATH = process.env.ICLOUD_SCRIPTABLE_PATH || null;
 const COPY_BUILD_TO_ICLOUD = !!ICLOUD_SCRIPTABLE_PATH;
+const ICLOUD_SCRIPTABLE_FILE_PATH = COPY_BUILD_TO_ICLOUD
+  ? path.join(ICLOUD_SCRIPTABLE_PATH, OUTPUT_FILE_NAME)
+  : null;
 
 let ctx = await esbuild.context({
   entryPoints: [ESBUILD_ENTRY],
@@ -24,11 +27,10 @@ let ctx = await esbuild.context({
     js: getScriptableBanner("red", "sun"),
   },
   define: {
-    "process.env.NODE_ENV": '"production"',
-    // When developing, it can be kind of annoying to open the Scriptable logs on
-    // the device. If you set the LOG_URL environment variable in the esbuild build
-    // process, calls to the `log` function will HTTP POST to the given endpoint.
-    "process.env.LOG_URL": `null`,
+    "process.env.NODE_ENV": '"development"',
+    "process.env.LOG_URL": process.env.LOG_URL
+      ? `"${process.env.LOG_URL}"`
+      : "null",
   },
   minify: false,
   plugins: [
@@ -38,9 +40,9 @@ let ctx = await esbuild.context({
         build.onEnd(async (result) => {
           console.log(`Built with ${result.errors.length} errors`);
           if (COPY_BUILD_TO_ICLOUD) {
-            await fs.copyFile(OUTPUT_FILE_PATH, ICLOUD_SCRIPTABLE_PATH);
+            await fs.copyFile(OUTPUT_FILE_PATH, ICLOUD_SCRIPTABLE_FILE_PATH);
             console.log(
-              `Copied ${OUTPUT_FILE_PATH} to ${ICLOUD_SCRIPTABLE_PATH}`,
+              `Copied ${OUTPUT_FILE_PATH} to ${ICLOUD_SCRIPTABLE_FILE_PATH}`,
             );
           }
         });

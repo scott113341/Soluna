@@ -7,22 +7,23 @@ import {
   getScriptableBanner,
   ESBUILD_ENTRY,
 } from "./common.mjs";
+import path from "node:path";
 
 const OUTPUT_FILE_NAME = "Soluna.mjs";
+const OUTPUT_FILE_PATH = path.join(OUTPUT_DIR_PATH, OUTPUT_FILE_NAME);
 
 const result = await esbuild.build({
   entryPoints: [ESBUILD_ENTRY],
   bundle: true,
-  outfile: `${OUTPUT_DIR_PATH}/${OUTPUT_FILE_NAME}`,
+  outfile: OUTPUT_FILE_PATH,
   banner: {
     js: getScriptableBanner("yellow", "sun"),
   },
   define: {
     "process.env.NODE_ENV": '"production"',
-    // When developing, it can be kind of annoying to open the Scriptable logs on
-    // the device. If you set the LOG_URL environment variable in the esbuild build
-    // process, calls to the `log` function will HTTP POST to the given endpoint.
-    "process.env.LOG_URL": `null`,
+    "process.env.LOG_URL": process.env.LOG_URL
+      ? `"${process.env.LOG_URL}"`
+      : "null",
   },
   minify: false,
 });
