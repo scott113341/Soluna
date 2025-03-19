@@ -128,7 +128,7 @@ async function getLocationInfo() {
 
     // Just try a real lookup again if cache didn't return anything
     if (!locationInfo) {
-      log("Trying a lookup again");
+      log("Cache failed... looking up location again");
       locationInfo = await lookupLocationInfo();
     }
   }
@@ -138,18 +138,28 @@ async function getLocationInfo() {
 
 // Does an actual location lookup using the Scriptable/iOS geolocation API
 async function lookupLocationInfo() {
-  Location.setAccuracyToThreeKilometers();
-  const { latitude, longitude } = await Location.current();
-  const locations = await Location.reverseGeocode(latitude, longitude);
-  const location = locations[0];
-  const locationStr = location
-    ? `${location.locality}, ${location.administrativeArea}`
-    : "Unknown";
+  try {
+    Location.setAccuracyToThreeKilometers();
+    const { latitude, longitude } = await Location.current();
+    const locations = await Location.reverseGeocode(latitude, longitude);
+    const location = locations[0];
+    const locationStr = location
+      ? `${location.locality}, ${location.administrativeArea}`
+      : "Unknown";
 
-  const locationInfo = { latitude, longitude, location, locationStr };
-  cacheLocationInfo(locationInfo);
-
-  return locationInfo;
+    const locationInfo = { latitude, longitude, location, locationStr };
+    cacheLocationInfo(locationInfo);
+    return locationInfo;
+  } catch (e) {
+    // The above `Location.current()` call can intermittently fail for some reason, with error:
+    //   "The operation couldn’t be completed. (kCLErrorDomain error 1.)"
+    // Some surface-level searching didn't turn up any promising leads as to why, but it's fine
+    // because we can fall back to cached location when this happens. Seems to happen more
+    // frequently when the widget tries to refresh while the phone is sleeping. Happens maybe ~10%
+    // of the time.
+    log(`Error looking up location: ${e.message}`);
+    return null;
+  }
 }
 
 function getCachedLocationInfo() {
@@ -160,12 +170,12 @@ function getCachedLocationInfo() {
 
     log({ locationInfo, LOCATION_CACHE_VERSION });
 
-    if (locationInfo.version !== LOCATION_CACHE_VERSION) {
+    if (locationInfo.version === LOCATION_CACHE_VERSION) {
+      return locationInfo;
+    } else {
       throw new Error(
         `Cached location version is ${locationInfo.version}; expected ${LOCATION_CACHE_VERSION}`,
       );
-    } else {
-      return locationInfo;
     }
   } catch (e) {
     log(`Error reading cached location: ${e.message}`);
