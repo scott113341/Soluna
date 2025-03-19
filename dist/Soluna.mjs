@@ -726,7 +726,7 @@
           return new Date(rize + (set - rize) / 2);
         }
         SunCalc2.moonTransit = function(rise, set, lat, lng) {
-          let main2 = null;
+          let main = null;
           let invert = null;
           const riseDate = new Date(rise);
           const setDate = new Date(set);
@@ -737,7 +737,7 @@
           let tempTransitAfter;
           if (rise && set) {
             if (rise < set) {
-              main2 = calcMoonTransit(riseValue, setValue);
+              main = calcMoonTransit(riseValue, setValue);
             } else {
               invert = calcMoonTransit(riseValue, setValue);
             }
@@ -745,21 +745,21 @@
           if (rise) {
             tempTransitAfter = calcMoonTransit(riseValue, SunCalc2.getMoonTimes(new Date(riseDate).setDate(day + 1), lat, lng).set.valueOf());
             if (tempTransitAfter.getDate() === day) {
-              if (main2) {
+              if (main) {
                 invert = tempTransitAfter;
               } else {
-                main2 = tempTransitAfter;
+                main = tempTransitAfter;
               }
             }
           }
           if (set) {
             tempTransitBefore = calcMoonTransit(setValue, SunCalc2.getMoonTimes(new Date(setDate).setDate(day - 1), lat, lng).rise.valueOf());
             if (tempTransitBefore.getDate() === day) {
-              main2 = tempTransitBefore;
+              main = tempTransitBefore;
             }
           }
           return {
-            main: main2,
+            main,
             invert
           };
         };
@@ -899,24 +899,33 @@
   var LOCATION_CACHE_FILE_PATH = CACHE_DIR + `/soluna.${ENVIRONMENT}.location.json`;
   var LOCATION_CACHE_VERSION = 1;
   (async () => {
-    await main();
-    configureWidget();
+    try {
+      const widget = await buildWidget();
+      widget.presentMedium();
+      Script.setWidget(widget);
+      Script.complete();
+    } catch (e) {
+      console.log(e);
+    }
   })();
-  async function main() {
-    const { latitude: latitude2, longitude: longitude2, locationStr } = await getLocationInfo();
-    const sunMoonInfo = getSunMoonInfo(NOW, latitude2, longitude2);
+  async function buildWidget() {
+    const { latitude, longitude, locationStr } = await getLocationInfo();
+    const sunMoonInfo = getSunMoonInfo(NOW, latitude, longitude);
     const yesterday = new Date(NOW);
     yesterday.setDate(NOW.getDate() - 1);
-    const yesterdaySunMoonInfo = getSunMoonInfo(yesterday, latitude2, longitude2);
+    const yesterdaySunMoonInfo = getSunMoonInfo(yesterday, latitude, longitude);
     const { dayDeltaMsStr, sunriseDeltaStr, sunsetDeltaStr } = getDeltas(
       sunMoonInfo,
       yesterdaySunMoonInfo
     );
-    const { minMs, minStr, maxMs, maxStr } = getYearlyDaylightInfo();
+    const { minMs, minStr, maxMs, maxStr } = getYearlyDaylightInfo(
+      latitude,
+      longitude
+    );
     const percentProgress = (sunMoonInfo.dayLengthMs - minMs) / (maxMs - minMs);
     const percentProgressStr = (percentProgress * 100).toPrecision(3).toString() + "%";
-    const widget2 = new ListWidget();
-    const stack = widget2.addStack();
+    const widget = new ListWidget();
+    const stack = widget.addStack();
     stack.layoutVertically();
     const monoFont = new Font("CourierNewPS-BoldMT", 18);
     [
@@ -946,11 +955,7 @@
     if (DEVELOPMENT) {
       refreshText.textColor = new Color("#ff0000", 100);
     }
-  }
-  function configureWidget() {
-    widget.presentMedium();
-    Script.setWidget(widget);
-    Script.complete();
+    return widget;
   }
   async function getLocationInfo() {
     let locationInfo = await Promise.race([
@@ -961,21 +966,26 @@
       log(`Fell back to cached location after ${LOCATION_TIMEOUT_MS}ms`);
       locationInfo = getCachedLocationInfo();
       if (!locationInfo) {
-        log("Trying a lookup again");
+        log("Cache failed... looking up location again");
         locationInfo = await lookupLocationInfo();
       }
     }
     return locationInfo;
   }
   async function lookupLocationInfo() {
-    Location.setAccuracyToThreeKilometers();
-    const { latitude: latitude2, longitude: longitude2 } = await Location.current();
-    const locations = await Location.reverseGeocode(latitude2, longitude2);
-    const location = locations[0];
-    const locationStr = location ? `${location.locality}, ${location.administrativeArea}` : "Unknown";
-    const locationInfo = { latitude: latitude2, longitude: longitude2, location, locationStr };
-    cacheLocationInfo(locationInfo);
-    return locationInfo;
+    try {
+      Location.setAccuracyToThreeKilometers();
+      const { latitude, longitude } = await Location.current();
+      const locations = await Location.reverseGeocode(latitude, longitude);
+      const location = locations[0];
+      const locationStr = location ? `${location.locality}, ${location.administrativeArea}` : "Unknown";
+      const locationInfo = { latitude, longitude, location, locationStr };
+      cacheLocationInfo(locationInfo);
+      return locationInfo;
+    } catch (e) {
+      log(`Error looking up location: ${e.message}`);
+      return null;
+    }
   }
   function getCachedLocationInfo() {
     try {
@@ -983,12 +993,12 @@
         LOCAL_FILE_MANAGER.readString(LOCATION_CACHE_FILE_PATH)
       );
       log({ locationInfo, LOCATION_CACHE_VERSION });
-      if (locationInfo.version !== LOCATION_CACHE_VERSION) {
+      if (locationInfo.version === LOCATION_CACHE_VERSION) {
+        return locationInfo;
+      } else {
         throw new Error(
           `Cached location version is ${locationInfo.version}; expected ${LOCATION_CACHE_VERSION}`
         );
-      } else {
-        return locationInfo;
       }
     } catch (e) {
       log(`Error reading cached location: ${e.message}`);
@@ -1065,7 +1075,7 @@
       sunsetDeltaStr
     };
   }
-  function getYearlyDaylightInfo() {
+  function getYearlyDaylightInfo(latitude, longitude) {
     let minMs = Infinity;
     let maxMs = -Infinity;
     for (let i = -1; i < 370; i++) {
@@ -1106,9 +1116,9 @@
   }
   async function log(message) {
     console.log(message);
-    if (DEVELOPMENT && null) {
+    if (DEVELOPMENT && "http://192.168.2.14:3000") {
       try {
-        const req = new Request(null);
+        const req = new Request("http://192.168.2.14:3000");
         req.method = "POST";
         req.body = JSON.stringify(message);
         await req.loadString();

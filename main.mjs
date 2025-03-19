@@ -19,16 +19,26 @@ const LOCATION_CACHE_FILE_PATH =
   CACHE_DIR + `/soluna.${ENVIRONMENT}.location.json`;
 const LOCATION_CACHE_VERSION = 1;
 
-////////////////////////////
-// GET AND CALCULATE INFO //
-////////////////////////////
+//////////
+// MAIN //
+//////////
 
 (async () => {
-  await main();
-  configureWidget();
+  try {
+    const widget = await buildWidget();
+    widget.presentMedium();
+    Script.setWidget(widget);
+    Script.complete();
+  } catch (e) {
+    console.log(e);
+  }
 })();
 
-async function main() {
+async function buildWidget() {
+  /////////////////////////////////////
+  // GET AND CALCULATE SUN/MOON INFO //
+  /////////////////////////////////////
+
   // Get info for today
   const { latitude, longitude, locationStr } = await getLocationInfo();
   const sunMoonInfo = getSunMoonInfo(NOW, latitude, longitude);
@@ -45,16 +55,19 @@ async function main() {
   );
 
   // Get yearly daylight min/max
-  const { minMs, minStr, maxMs, maxStr } = getYearlyDaylightInfo();
+  const { minMs, minStr, maxMs, maxStr } = getYearlyDaylightInfo(
+    latitude,
+    longitude,
+  );
 
   // Find current "percent progress" between yearly daylight min/max
   const percentProgress = (sunMoonInfo.dayLengthMs - minMs) / (maxMs - minMs);
   const percentProgressStr =
     (percentProgress * 100).toPrecision(3).toString() + "%";
 
-  ////////////
-  // LAYOUT //
-  ////////////
+  //////////////////
+  // BUILD WIDGET //
+  //////////////////
 
   const widget = new ListWidget();
   const stack = widget.addStack();
@@ -93,15 +106,8 @@ async function main() {
   if (DEVELOPMENT) {
     refreshText.textColor = new Color("#ff0000", 100);
   }
-}
-///////////////////
-// WIDGET CONFIG //
-///////////////////
 
-function configureWidget() {
-  widget.presentMedium();
-  Script.setWidget(widget);
-  Script.complete();
+  return widget;
 }
 
 /////////////////
@@ -122,7 +128,7 @@ async function getLocationInfo() {
 
     // Just try a real lookup again if cache didn't return anything
     if (!locationInfo) {
-      log("Trying a lookup again");
+      log("Cache failed... looking up location again");
       locationInfo = await lookupLocationInfo();
     }
   }
@@ -132,18 +138,28 @@ async function getLocationInfo() {
 
 // Does an actual location lookup using the Scriptable/iOS geolocation API
 async function lookupLocationInfo() {
-  Location.setAccuracyToThreeKilometers();
-  const { latitude, longitude } = await Location.current();
-  const locations = await Location.reverseGeocode(latitude, longitude);
-  const location = locations[0];
-  const locationStr = location
-    ? `${location.locality}, ${location.administrativeArea}`
-    : "Unknown";
+  try {
+    Location.setAccuracyToThreeKilometers();
+    const { latitude, longitude } = await Location.current();
+    const locations = await Location.reverseGeocode(latitude, longitude);
+    const location = locations[0];
+    const locationStr = location
+      ? `${location.locality}, ${location.administrativeArea}`
+      : "Unknown";
 
-  const locationInfo = { latitude, longitude, location, locationStr };
-  cacheLocationInfo(locationInfo);
-
-  return locationInfo;
+    const locationInfo = { latitude, longitude, location, locationStr };
+    cacheLocationInfo(locationInfo);
+    return locationInfo;
+  } catch (e) {
+    // The above `Location.current()` call can intermittently fail for some reason, with error:
+    //   "The operation couldn’t be completed. (kCLErrorDomain error 1.)"
+    // Some surface-level searching didn't turn up any promising leads as to why, but it's fine
+    // because we can fall back to cached location when this happens. Seems to happen more
+    // frequently when the widget tries to refresh while the phone is sleeping. Happens maybe ~10%
+    // of the time.
+    log(`Error looking up location: ${e.message}`);
+    return null;
+  }
 }
 
 function getCachedLocationInfo() {
@@ -154,12 +170,12 @@ function getCachedLocationInfo() {
 
     log({ locationInfo, LOCATION_CACHE_VERSION });
 
-    if (locationInfo.version !== LOCATION_CACHE_VERSION) {
+    if (locationInfo.version === LOCATION_CACHE_VERSION) {
+      return locationInfo;
+    } else {
       throw new Error(
         `Cached location version is ${locationInfo.version}; expected ${LOCATION_CACHE_VERSION}`,
       );
-    } else {
-      return locationInfo;
     }
   } catch (e) {
     log(`Error reading cached location: ${e.message}`);
@@ -263,7 +279,7 @@ function getDeltas(sunMoonInfo, yesterdaySunMoonInfo) {
   };
 }
 
-function getYearlyDaylightInfo() {
+function getYearlyDaylightInfo(latitude, longitude) {
   // Find min/max daylight
   let minMs = Infinity;
   let maxMs = -Infinity;

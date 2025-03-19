@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "dotenv": "^16.4.7",
-    "esbuild": "^0.24.2",
+    "esbuild": "^0.25.1",
     "prettier": "^3.4.2",
     "small-date": "^2.0.1",
     "suncalc3": "^2.0.5"
